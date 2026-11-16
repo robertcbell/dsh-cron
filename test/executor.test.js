@@ -1,9 +1,24 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { renderCronFraming, renderCronPrompt, runSessionMeta, summarize } from "../lib/executor.js";
+import { deliver, renderCronFraming, renderCronPrompt, runCallbackTask, runCommandTask, runSessionMeta, summarize } from "../lib/executor.js";
 
 const job = (name, prompt = "do the thing") => ({ name, task: { prompt } });
 const ISO = "2026-08-26T12:07:19.272Z";
+
+test("runCommandTask: synchronous spawn failure settles as failed", async () => {
+	const result = await runCommandTask({ task: { argv: [process.execPath], cwd: 42, timeoutSeconds: 1 } });
+	assert.equal(result.status, "failed");
+	assert.equal(result.summary, "");
+	assert.match(result.error, /cwd.*must be/i);
+	assert.deepEqual(Object.keys(result).sort(), ["error", "status", "summary"]);
+});
+
+test("deliver: synchronous spawn failure settles as unsuccessful", async () => {
+	const result = await deliver({ delivery: { argv: [] } }, {});
+	assert.equal(result.ok, false);
+	assert.match(result.error, /file.*must be/i);
+	assert.deepEqual(Object.keys(result).sort(), ["error", "ok"]);
+});
 
 test("renderCronFraming: framing only, no job prompt", () => {
 	const text = renderCronFraming(job("t1"), ISO);
@@ -32,6 +47,49 @@ test("runSessionMeta: the run Session stays plain, so the harness keeps it addre
 	assert.equal(runSessionMeta("").cwd, process.cwd());
 });
 
+test("runCallbackTask: timeout settles without waiting for a handler that ignores abort", { timeout: 1_000 }, async () => {
+	const result = await runCallbackTask(
+		{ task: { kind: "callback", timeoutSeconds: 0.05 } },
+		undefined,
+		() => new Promise(() => {}),
+	);
+	assert.deepEqual(result, {
+		status: "timeout",
+		summary: "",
+		error: "callback exceeded 0.05s",
+	});
+});
+
+test("runCallbackTask: timeout aborts the signal passed to the handler", { timeout: 1_000 }, async () => {
+	let signal;
+	let initiallyAborted;
+	await runCallbackTask(
+		{ task: { kind: "callback", timeoutSeconds: 0.05 } },
+		undefined,
+		(context) => {
+			signal = context.signal;
+			initiallyAborted = signal.aborted;
+			return new Promise(() => {});
+		},
+	);
+	assert.ok(signal instanceof AbortSignal);
+	assert.equal(initiallyAborted, false);
+	assert.equal(signal.aborted, true);
+});
+
+test("runCallbackTask: ok false preserves the handler's summary and error", async () => {
+	const result = await runCallbackTask(
+		{ task: { kind: "callback", timeoutSeconds: 0.05 } },
+		undefined,
+		() => ({ ok: false, summary: "partial work", error: "provider unavailable" }),
+	);
+	assert.deepEqual(result, {
+		status: "failed",
+		summary: "partial work",
+		error: "provider unavailable",
+	});
+});
+
 const EVENTS = [
 	{ seq: 0, type: "assistant/message", data: { message: { content: [{ type: "text", text: "stale" }] } } },
 	{ seq: 1, type: "turn/start", data: {} },
@@ -58,4 +116,18 @@ test("summarize: V3 session exposes events via eventAt(seq) only", () => {
 	assert.deepEqual(out.reason, { kind: "completed" });
 	assert.equal(summarize(session, 4).text, "");
 	assert.throws(() => summarize({ seq: 3, eventAt: () => undefined }, 1), /cannot read seq 1/);
+});
+
+test("deliver: tolerates EPIPE on stdin when the command exits without reading", async () => {
+	const record = { blob: "x".repeat(4 * 1024 * 1024) };
+	const j = { delivery: { argv: [process.execPath, "-e", "process.exit(0)"] } };
+	const result = await deliver(j, record, process.env);
+	assert.equal(result.ok, true);
+});
+
+test("deliver: reports a nonzero exit with stderr once", async () => {
+	const j = { delivery: { argv: [process.execPath, "-e", "console.error('boom');process.exit(3)"] } };
+	const result = await deliver(j, {}, process.env);
+	assert.equal(result.ok, false);
+	assert.match(result.error, /exit 3: boom/);
 });
