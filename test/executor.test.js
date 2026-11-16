@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { existsSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { ChildProcess } from "node:child_process";
+import { setTimeout as realSleep } from "node:timers/promises";
+import { mock, test } from "node:test";
 import { deliver, renderCronFraming, renderCronPrompt, runCallbackTask, runCommandTask, runSessionMeta, summarize } from "../lib/executor.js";
 
 const job = (name, prompt = "do the thing") => ({ name, task: { prompt } });
@@ -18,6 +23,137 @@ test("deliver: synchronous spawn failure settles as unsuccessful", async () => {
 	assert.equal(result.ok, false);
 	assert.match(result.error, /file.*must be/i);
 	assert.deepEqual(Object.keys(result).sort(), ["error", "ok"]);
+});
+
+// Real (unmocked) timers captured at import time; mock.timers only patches what a test enables.
+const tick = () => realSleep(1);
+async function until(pred, what, deadlineMs = 10_000) {
+	const end = Date.now() + deadlineMs;
+	while (Date.now() < end) {
+		if (pred()) return;
+		await realSleep(10);
+	}
+	throw new Error(`timed out waiting for ${what}`);
+}
+const alive = (pid) => {
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch {
+		return false;
+	}
+};
+
+/** Spy on timers: records handles created for 60s and which handles were cleared. */
+function spyTimers() {
+	mock.timers.enable({ apis: ["setTimeout"] });
+	const created = [];
+	const cleared = [];
+	const realSet = globalThis.setTimeout;
+	const realClear = globalThis.clearTimeout;
+	mock.method(globalThis, "setTimeout", (fn, ms, ...a) => {
+		const h = realSet(fn, ms, ...a);
+		created.push({ h, ms });
+		return h;
+	});
+	mock.method(globalThis, "clearTimeout", (h) => {
+		cleared.push(h);
+		return realClear(h);
+	});
+	return { created, cleared };
+}
+const resetTimers = () => {
+	mock.restoreAll();
+	mock.timers.reset();
+};
+
+test("deliver: 60s timeout kills the child and settles once with the timeout error", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "deliver-to-"));
+	const pidFile = join(dir, "pid");
+	let pid;
+	let spy;
+	let child;
+	const realSpawn = ChildProcess.prototype.spawn;
+	try {
+		// Capture the child synchronously so teardown never depends on the pid-file handshake.
+		ChildProcess.prototype.spawn = function (...a) {
+			child = this;
+			return realSpawn.apply(this, a);
+		};
+		spy = spyTimers();
+		const script = `require("fs").writeFileSync(${JSON.stringify(pidFile)}, String(process.pid)); setInterval(()=>{},1e3)`;
+		const p = deliver({ delivery: { argv: [process.execPath, "-e", script] } }, { id: 1 });
+		ChildProcess.prototype.spawn = realSpawn;
+		assert.ok(child?.pid, "child captured at spawn");
+		assert.deepEqual(spy.created.map((c) => c.ms), [60_000]);
+		await until(() => existsSync(pidFile) && readFileSync(pidFile, "utf8"), "child pid");
+		pid = Number(readFileSync(pidFile, "utf8"));
+		assert.ok(alive(pid));
+		let settledEarly = false;
+		p.then(() => { settledEarly = true; });
+		mock.timers.tick(59_999);
+		await tick();
+		assert.equal(settledEarly, false, "must not settle before 60s");
+		assert.ok(alive(pid));
+		mock.timers.tick(1);
+		assert.deepEqual(await p, { ok: false, error: "delivery command exceeded 60s" });
+		await until(() => !alive(pid), "child killed");
+		// The late "close" (code null from SIGKILL) must not change anything: timer cleared, no re-fire.
+		await until(() => spy.cleared.includes(spy.created[0].h), "clearTimeout on close");
+		assert.equal(spy.created.length, 1);
+		mock.timers.tick(120_000);
+		assert.deepEqual(await p, { ok: false, error: "delivery command exceeded 60s" });
+	} finally {
+		ChildProcess.prototype.spawn = realSpawn;
+		resetTimers();
+		pid ??= child?.pid;
+		if (pid && alive(pid)) {
+			try {
+				process.kill(pid, "SIGKILL");
+			} catch {}
+			await until(() => !alive(pid), "leaked child reaped", 5_000).catch(() => {});
+		}
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test("deliver: error event then close settles once with the error, not an exit code", async () => {
+	const events = [];
+	const realEmit = ChildProcess.prototype.emit;
+	try {
+		ChildProcess.prototype.emit = function (name, ...args) {
+			if (name === "error" || name === "close") events.push(name);
+			return realEmit.call(this, name, ...args);
+		};
+		const spy = spyTimers();
+		const result = await deliver({ delivery: { argv: ["/nonexistent/dsh-cron-no-such-cmd"] } }, {});
+		// Observe that BOTH events really fired (close follows error) before judging the outcome.
+		await until(() => events.includes("error") && events.includes("close"), "error and close events");
+		assert.ok(events.indexOf("error") < events.indexOf("close"));
+		assert.equal(result.ok, false);
+		assert.match(result.error, /ENOENT/);
+		assert.doesNotMatch(result.error, /^exit /);
+		assert.deepEqual(Object.keys(result).sort(), ["error", "ok"]);
+		assert.equal(spy.created.length, 1);
+		assert.ok(spy.cleared.includes(spy.created[0].h), "error path clears the 60s timer");
+		mock.timers.tick(120_000);
+	} finally {
+		ChildProcess.prototype.emit = realEmit;
+		resetTimers();
+	}
+});
+
+test("deliver: normal exit clears the timer so it never fires afterwards", async () => {
+	try {
+		const spy = spyTimers();
+		const ok = await deliver({ delivery: { argv: [process.execPath, "-e", "process.stdin.resume();process.stdin.on('end',()=>process.exit(0))"] } }, { a: 1 });
+		assert.deepEqual(ok, { ok: true });
+		assert.ok(spy.cleared.includes(spy.created[0].h));
+		const bad = await deliver({ delivery: { argv: [process.execPath, "-e", "console.error('boom');process.exit(3)"] } }, {});
+		assert.deepEqual(bad, { ok: false, error: "exit 3: boom\n" });
+	} finally {
+		resetTimers();
+	}
 });
 
 test("renderCronFraming: framing only, no job prompt", () => {
