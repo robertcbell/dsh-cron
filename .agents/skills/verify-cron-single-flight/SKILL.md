@@ -17,8 +17,14 @@ concurrent run of an agent job is a second paid model session.
 bash verify/single-flight/run.sh
 ```
 
-PASS = explorer GREEN with all witnesses, every non-equivalent mutant KILLED,
-baseline GREEN. `--quick` skips mutations (about 0.3 s instead of about 30 s).
+Exit 0 = explorer GREEN with all witnesses, every non-equivalent mutant
+KILLED (M3 labelled "SURVIVED as expected"), baseline GREEN, and, when
+`tla2tools.jar` is present, every TLC config meets its declared expectation
+(correct models pass; `Mutant-*` must report `Invariant SingleFlight is
+violated`; `Witness-*` must report their own invariant violated). Any other
+java exit is a failure. Without the jar the last line says `tlc=SKIPPED`,
+never PASS; `REQUIRE_TLC=1` turns SKIPPED into a failure. `--quick` skips
+mutations (about 0.3 s instead of about 30 s).
 
 ## What is checked, by which tool
 
