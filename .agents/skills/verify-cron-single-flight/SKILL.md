@@ -62,7 +62,7 @@ Node runs one step at a time between `await`s; each row is one such step.
 
 ## Tool versions
 
-Node v26.13.1 (explorer). TLA+ tools: not available here; intended `tla2tools.jar` 1.8.0 (`run.sh` uses `$TLA2TOOLS` or `verify/single-flight/.tools/tla2tools.jar` when Java exists).
+Node v26.13.1 (explorer). TLA+ tools: TLC 2026.11.19 (rev bc1b506) `tla2tools.jar` and Temurin 21.0.13.1+2 arm64, in `/Users/agentwork/Work/Repos/.tools/`; the jar is unchecksummed (no published checksum) (`run.sh` uses `$TLA2TOOLS` or `verify/single-flight/.tools/tla2tools.jar` when Java exists).
 
 ## Last checked
 
