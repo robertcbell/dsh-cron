@@ -148,3 +148,8 @@ test("Off run failure through the service is a visible failed run with no summar
 	const [run] = s.runsView("nightly", 1);
 	assert.equal(run.status, "failed"); assert.match(run.error, /Code Mode Off requested/); assert.equal(run.summary, "");
 });
+
+test("cron-create skill documents the codeMode enum verbatim", async () => {
+	const { CRON_SKILL } = await import("../lib/skill.js");
+	assert.match(CRON_SKILL.content, /Optional `codeMode`: `"default"` \(or omitted\) or `"off"`/);
+});
