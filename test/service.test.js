@@ -143,6 +143,18 @@ test("runNow: manual run settles without touching lastFiredMs", async () => {
 	assert.equal(state.runSeq, 1);
 });
 
+test("runNow: two concurrent calls launch exactly one run (single-flight)", async () => {
+	// Double click / two tool calls: both pass the pre-await running check
+	// before either launches; the post-await re-check must refuse one.
+	const service = await makeService([CMD_JOB]);
+	const answers = await Promise.all([service.runNow("echo"), service.runNow("echo")]);
+	assert.equal(answers.filter((a) => a.started === true).length, 1);
+	assert.equal(answers.filter((a) => a.code === "already_running").length, 1);
+	await service.running.get("echo")?.promise;
+	const running = [...service.domain.table("runs").keys()].filter((k) => k.startsWith("echo#"));
+	assert.equal(running.length, 1);
+});
+
 test("runNow: the running record is readable once the call resolves", async () => {
 	// The real storage-domain table only exposes a write after backend
 	// durability; a stub whose map updates synchronously would hide the
