@@ -32,7 +32,7 @@ mutations (about 0.3 s instead of about 30 s).
 |---|---|---|
 | `verify/single-flight/explore.mjs` | Node re-execution DFS over **real** `lib/service.js`: every storage write is a deferred step, every task finish is explorer-chosen; all orders enumerated | GREEN, exhaustive in all 3 default scenarios |
 | `verify/single-flight/mutate.sh` | Removes real guards in a temp copy of `lib/` | M1, M2 KILLED; M3 equivalent (survives by design) |
-| `verify/single-flight/CronSingleFlight.tla` + `*.cfg` | TLA+ model, TLC | **NOT RUN**: no Java runtime on this host (`/usr/bin/java` stub only). Spec is unchecked by TLC until someone runs it. |
+| `verify/single-flight/CronSingleFlight.tla` + `*.cfg` | TLA+ model, TLC | **RUN** with TLC 2026.11.19 (rev bc1b506), Temurin 21.0.13.1+2 arm64 (both in `~/Work/Repos/.tools/`; the jar has no published checksum). All 7 configs gave expected results (generated/distinct states): CronSingleFlight no error 847/366; CronSingleFlight-queue no error 1023/454; M1 SingleFlight violated 131/92; M2 SingleFlight violated 112/76; Witness-Finishes 112/79; Witness-Refused 80/55; Witness-Skipped 99/67. Only warning: the standard fingerprint-collision notice. Run: `TLA2TOOLS=<path>/tla2tools.jar PATH=<jdk>/bin:$PATH REQUIRE_TLC=1 bash verify/single-flight/run.sh`. |
 | `test/service.test.js` "two concurrent calls launch exactly one run" | `npm test` regression | passes with fix, fails without |
 
 The explorer is **stateless model checking by re-execution, not TLC**.
@@ -66,7 +66,7 @@ Node v26.13.1 (explorer). TLA+ tools: not available here; intended `tla2tools.ja
 
 ## Last checked
 
-Branch `fv-pilot`, base `8ef9a5f`; last-checked commit = the lane commit that last changed this file (`git log -1 --format=%h -- .agents/skills/verify-cron-single-flight/SKILL.md`). Covered-file hashes (run.sh reports drift):
+Last-checked commit `5812f40` (TLC run on it); previously branch `fv-pilot`, base `8ef9a5f`; later = the lane commit that last changed this file (`git log -1 --format=%h -- .agents/skills/verify-cron-single-flight/SKILL.md`). Covered-file hashes (run.sh reports drift):
 
 - sha256 a4e6b19e7719a640345e821fa85a8f02e1eb3feeaa5bff5a75023bea0aef59e7 `lib/service.js`
 - sha256 063f1f6668dae794a54a29de26f6315296d26cee4a3412bbdc32c13475c67d98 `lib/executor.js`
