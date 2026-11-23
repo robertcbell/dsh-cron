@@ -92,6 +92,10 @@ Cron jobs are **host administration**, not sandboxed extensions of the creating 
 - Config-declared and plugin-registered jobs remain trusted host declarations. Commands and delivery still execute on the host, now with an explicit environment allowlist: `PATH`, `HOME`, `USER`, `LOGNAME`, `LANG`, `LC_ALL`, `LC_CTYPE`, `TZ`, `TMPDIR`, `TMP`, `TEMP`, `SystemRoot`, `WINDIR`. To pass an additional variable, the operator must list its **name** in plugin config `commandEnv: [MY_SERVICE_TOKEN]`. This explicitly grants that variable to all host command/delivery jobs; model-controlled specs cannot extend the list. Environment filtering is not process confinement.
 - An explicit agent access preset must apply successfully or the run fails before prompt submission. Missing services and invalid presets no longer silently fall back to host defaults.
 
+### Code Mode Off
+
+An agent job may set `task.codeMode` to `"off"` (the form's **Code Mode: Off**; omitted or `"default"` keeps the host's usual behavior). Each run then binds the exact Session object it creates to Code Mode's host-only run policy inside native creation setup (before presets mount), and submits its first prompt only after Code Mode confirms, in its serialized selection queue, that the effective choice for that Session is Off. Requires `@local/dsh-codemode` 0.12.0 or later. If the service is absent, disposed or refuses (for example a saved On for that Session), the run fails visibly **before any prompt**; there is no fallback On. The run's recorded session ID is attribution only: an ordinary session created under the same ID gets no Off and nothing else. The binding is not durable, so resuming an old run later follows the normal interactive/saved Code Mode choice. A later deliberate On by a human is still allowed. Default and command jobs never touch the service. Adding or removing `codeMode` changes the job's authorization digest like any other spec edit; previously authorized specs without the field keep their authorization.
+
 These are intentional compatibility changes addressing [issue #6](https://github.com/squirrel20/dsh-cron/issues/6). Protect the host configuration, cron storage and other host-admin interfaces as part of the same trust boundary.
 
 ## Usage
@@ -104,6 +108,7 @@ Click **`+`** in the sidebar's **Cron Jobs** section header. The New job dialog 
 - **Trigger** — `cron` (5-field expression + IANA time zone), `interval`, or `one-shot`.
 - **Task** — `agent` (a prompt executed unattended through the full dsh toolchain) or `command` (an argv to spawn).
 - **Preset / Access / Model** — leave blank to inherit the host defaults.
+- **Code Mode: Default / Off** — beside the preset. *Off* starts every run with Code Mode Off (agent tasks only; stored as `task.codeMode: "off"`, omitted for Default). See [Code Mode Off](#code-mode-off).
 - **Working directory** — type a path or browse via the folder icon.
 - **Timeout, On overlap, On misfire** — see [Features](#features) for the policy semantics.
 
