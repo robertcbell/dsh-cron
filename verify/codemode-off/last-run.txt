@@ -1,11 +1,11 @@
-node v26.13.1; cron HEAD 346269d; codemode fd343a3
+node v26.13.1; cron HEAD e2590db; codemode e2590db
 == covered-file hashes
 f1124ff200f0441539e6500cb6b077b9c8d52c791556df9b62ef87dd5331b9ce  lib/agent-task.js
 aca09f29e048e23aca6f5966179ccb2158e078562fc01ee5d8365f267838dc85  lib/service.js
 7a6c1f9f16c45380d8390b64f3b1cf10e9eb4d0b89d37337683f912481664153  lib/executor.js
 e049233be2a119e145ebc6f95ca1403cd5272010e853abf959a40f777e5f7340  lib/security.js
-ca1a57a216b75df2ae82643ff76ba8572b8b61054e6c5b818d0da69b2b025e7e  ~/Work/Repos/.worktrees/codemode-cron-off-v1/DeepSeekHarness/plugins/dsh-codemode/run-policy.mjs
-d4a1b3ed3381914a8d7a8185a9c326b3e79bdb5ba3d131e5d12fe27f9de4b0b3  ~/Work/Repos/.worktrees/codemode-cron-off-v1/DeepSeekHarness/plugins/dsh-codemode/selection.mjs
+ca1a57a216b75df2ae82643ff76ba8572b8b61054e6c5b818d0da69b2b025e7e  /Users/agentwork/Work/Repos/DeepSeekHarness/dsh-cron/.git/codemode-off-build-19cf794/x-cm/package/run-policy.mjs
+d4a1b3ed3381914a8d7a8185a9c326b3e79bdb5ba3d131e5d12fe27f9de4b0b3  /Users/agentwork/Work/Repos/DeepSeekHarness/dsh-cron/.git/codemode-off-build-19cf794/x-cm/package/selection.mjs
 == real-code interleaving explorer (NOT a TLC model check)
 
 == scenario pending-claim-permit (backend=permit; actors=runner:P:off + claim:P)
@@ -58,9 +58,9 @@ d4a1b3ed3381914a8d7a8185a9c326b3e79bdb5ba3d131e5d12fe27f9de4b0b3  ~/Work/Repos/.
    witnesses (schedules reaching each event): {"offSubmitted":84,"defaultSubmitted":0,"runFailed":0,"claimReadOn":0,"claimReadOff":84,"adoptRead":0,"onRefused":0,"disposeRefused":0,"collision":0,"serviceTouchedByDefault":0,"claimAdmitRefused":84}
    no-gain/no-loss held in every schedule
 
-cron lib: ~/Work/Repos/DeepSeekHarness/dsh-cron/.worktrees/cron-codemode-off-v1/lib
-codemode: ~/Work/Repos/.worktrees/codemode-cron-off-v1/DeepSeekHarness/plugins/dsh-codemode
-result: PASS (728 ms)
+cron lib: /Users/agentwork/Work/Repos/DeepSeekHarness/dsh-cron/.git/codemode-off-build-19cf794/copy/lib
+codemode: /Users/agentwork/Work/Repos/DeepSeekHarness/dsh-cron/.git/codemode-off-build-19cf794/x-cm/package
+result: PASS (751 ms)
 == guard-removal mutations
 ### mutant M1-id-key (scenario pending-claim-permit)
 
@@ -79,8 +79,8 @@ result: PASS (728 ms)
      9. claim2: reads effective Code Mode Off for P
      10. VIOLATION G1: a non-runner object under the run id reads Off without its own saved Off
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M1-id-key/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M1-id-key/cm
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M1-id-key/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M1-id-key/cm
 result: FAIL (40 ms)
 ### mutant M1-id-key: KILLED (RED with counterexample, as expected)
 ### mutant M2-no-exact-admission (scenario claim-default-off)
@@ -97,8 +97,8 @@ result: FAIL (40 ms)
      5. claim2: reads effective Code Mode Off for P
      6. VIOLATION G2: an ordinary claimant's prompt passed the runner admission
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M2-no-exact-admission/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M2-no-exact-admission/cm
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M2-no-exact-admission/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M2-no-exact-admission/cm
 result: FAIL (41 ms)
 ### mutant M2-no-exact-admission: KILLED (RED with counterexample, as expected)
 ### mutant M3-saved-on (scenario on-vs-admission)
@@ -122,9 +122,9 @@ result: FAIL (41 ms)
      12. runner1: first prompt submitted on P (Off job)
      13. VIOLATION L1: submitted while the committed saved choice is On (effective On)
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M3-saved-on/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M3-saved-on/cm
-result: FAIL (12 ms)
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M3-saved-on/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M3-saved-on/cm
+result: FAIL (13 ms)
 ### mutant M3-saved-on: KILLED (RED with counterexample, as expected)
 ### mutant M4-unserialized (scenario on-vs-admission)
 
@@ -144,9 +144,9 @@ result: FAIL (12 ms)
      10. runner1: first prompt submitted on P (Off job)
      11. VIOLATION L1: submitted although an On request was issued before admission began
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M4-unserialized/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M4-unserialized/cm
-result: FAIL (14 ms)
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M4-unserialized/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M4-unserialized/cm
+result: FAIL (13 ms)
 ### mutant M4-unserialized: KILLED (RED with counterexample, as expected)
 ### mutant M5-no-liveness (scenario unload-race)
 
@@ -165,8 +165,8 @@ result: FAIL (14 ms)
      9. runner1: first prompt submitted on P (Off job)
      10. VIOLATION L3: Off job submitted after Code Mode service disposal
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M5-no-liveness/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M5-no-liveness/cm
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M5-no-liveness/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M5-no-liveness/cm
 result: FAIL (5 ms)
 ### mutant M5-no-liveness: KILLED (RED with counterexample, as expected)
 ### mutant M5b-runpolicy-liveness-only (scenario unload-race)
@@ -176,9 +176,9 @@ result: FAIL (5 ms)
    witnesses (schedules reaching each event): {"offSubmitted":2,"defaultSubmitted":0,"runFailed":5,"claimReadOn":0,"claimReadOff":0,"adoptRead":0,"onRefused":0,"disposeRefused":5,"collision":0,"serviceTouchedByDefault":0,"claimAdmitRefused":0}
    no-gain/no-loss held in every schedule
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M5b-runpolicy-liveness-only/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M5b-runpolicy-liveness-only/cm
-result: PASS (6 ms)
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M5b-runpolicy-liveness-only/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M5b-runpolicy-liveness-only/cm
+result: PASS (5 ms)
 ### mutant M5b-runpolicy-liveness-only: SURVIVED as declared (equivalent: see comment)
 ### mutant M6-bind-after-create (scenario blank-adopt)
 
@@ -196,8 +196,8 @@ result: PASS (6 ms)
      8. adopt2: reads effective Code Mode On for P
      9. VIOLATION L2: the runner-created Session reads On (unsaved) after Agent publication
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M6-bind-after-create/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M6-bind-after-create/cm
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M6-bind-after-create/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M6-bind-after-create/cm
 result: FAIL (6 ms)
 ### mutant M6-bind-after-create: KILLED (RED with counterexample, as expected)
 ### mutant M7-missing-service-fallback (scenario boot-not-ready)
@@ -217,8 +217,8 @@ result: FAIL (6 ms)
      7. runner1: first prompt submitted on P (Off job)
      8. VIOLATION L3: Off job submitted with no Code Mode service
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M7-missing-service-fallback/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M7-missing-service-fallback/cm
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M7-missing-service-fallback/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M7-missing-service-fallback/cm
 result: FAIL (16 ms)
 ### mutant M7-missing-service-fallback: KILLED (RED with counterexample, as expected)
 ### mutant M8-no-admission (scenario on-vs-admission)
@@ -237,9 +237,9 @@ result: FAIL (16 ms)
      7. runner1: first prompt submitted on P (Off job)
      8. VIOLATION L1: Off job submitted without admission
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M8-no-admission/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M8-no-admission/cm
-result: FAIL (14 ms)
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M8-no-admission/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M8-no-admission/cm
+result: FAIL (15 ms)
 ### mutant M8-no-admission: KILLED (RED with counterexample, as expected)
 ### mutant M9-no-cron-bound-check (scenario pending-claim-permit)
 
@@ -248,9 +248,9 @@ result: FAIL (14 ms)
    witnesses (schedules reaching each event): {"offSubmitted":84,"defaultSubmitted":0,"runFailed":0,"claimReadOn":84,"claimReadOff":0,"adoptRead":0,"onRefused":0,"disposeRefused":0,"collision":0,"serviceTouchedByDefault":0,"claimAdmitRefused":84}
    no-gain/no-loss held in every schedule
 
-cron lib: $TMPDIRcron-cmoff-mut.tSBjAA/M9-no-cron-bound-check/lib
-codemode: $TMPDIRcron-cmoff-mut.tSBjAA/M9-no-cron-bound-check/cm
-result: PASS (41 ms)
+cron lib: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M9-no-cron-bound-check/lib
+codemode: /var/folders/mt/l421qfzx14b9g16403c0zqvm0000gp/T/cron-cmoff-mut.xqGE77/M9-no-cron-bound-check/cm
+result: PASS (40 ms)
 ### mutant M9-no-cron-bound-check: SURVIVED as declared (equivalent: see comment)
 ### baseline (unmutated code)
 == scenario pending-claim-permit (backend=permit; actors=runner:P:off + claim:P)
@@ -273,6 +273,6 @@ result: PASS (41 ms)
    schedules explored: 84 (exhaustive); max steps per schedule: 9
 == scenario claim-default-off (backend=permit; actors=runner:P:off + claim:P)
    schedules explored: 84 (exhaustive); max steps per schedule: 9
-result: PASS (751 ms)
+result: PASS (844 ms)
 ### baseline: GREEN
 verify codemode-off: explorer=PASS mutations=PASS tlc=NOT-APPLICABLE
